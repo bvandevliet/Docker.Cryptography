@@ -1,0 +1,24 @@
+ARG TAG=6.0-alpine-arm64v8
+
+FROM mcr.microsoft.com/dotnet/aspnet:${TAG} AS base
+WORKDIR /app
+EXPOSE 80
+
+FROM mcr.microsoft.com/dotnet/sdk:6.0-alpine AS build
+WORKDIR /src
+COPY . .
+RUN dotnet restore "Docker.Cryptography/Docker.Cryptography.csproj"
+
+WORKDIR /src/Docker.Cryptography
+ARG MODE=Release
+RUN dotnet build "Docker.Cryptography.csproj" -c ${MODE} -o /app/build
+
+FROM build AS publish
+ARG MODE=Release
+RUN dotnet publish "Docker.Cryptography.csproj" -c ${MODE} -o /app/publish /p:UseAppHost=false
+
+FROM base AS final
+RUN apk add -U --no-cache tzdata
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "Docker.Cryptography.dll"]

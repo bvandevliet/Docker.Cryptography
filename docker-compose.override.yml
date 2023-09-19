@@ -1,0 +1,13 @@
+version: '3.6'
+
+services:
+
+  cryptography:
+    build:
+      args:
+        - TAG=6.0-alpine
+        - MODE=Debug
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "80"
