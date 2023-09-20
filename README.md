@@ -23,6 +23,11 @@ This file is mounted as a volume so the key is persisted between container resta
 
 ### Running the container
 
+Configure the allowed hosts to improve security.  
+Allowed hosts is a semicolon-delimited list of host names without port numbers.  
+Requests without a matching host name will be refused.  
+Host names may be prefixed with a '*.' wildcard, or use '*' to allow all hosts.  
+
 ```
 # docker-compose.yml
 
@@ -38,4 +43,5 @@ services:
       - ./.volumes/secrets:/app/secrets
     environment:
       - TZ=Europe/Amsterdam
+      - AllowedHosts=localhost;*.local
 ```
