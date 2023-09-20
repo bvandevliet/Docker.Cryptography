@@ -8,10 +8,14 @@ namespace Docker.Cryptography.Controllers;
 [Route("api")]
 public class EncryptionController : ControllerBase
 {
+  private readonly ILogger<EncryptionController> _logger;
   private readonly SecretKeyManager _keyManager;
 
-  public EncryptionController(SecretKeyManager keyManager)
+  public EncryptionController(
+    ILogger<EncryptionController> logger,
+    SecretKeyManager keyManager)
   {
+    _logger = logger;
     _keyManager = keyManager;
   }
 
@@ -30,6 +34,8 @@ public class EncryptionController : ControllerBase
   [HttpPost("encrypt")]
   public IActionResult Encrypt([FromBody] string plainText)
   {
+    _logger.LogInformation("Handling encryption request for {Host}", HttpContext.Connection.RemoteIpAddress);
+
     try
     {
       using var aes = Aes.Create();
@@ -65,6 +71,8 @@ public class EncryptionController : ControllerBase
   [HttpPost("decrypt")]
   public IActionResult Decrypt([FromBody] string cipherText)
   {
+    _logger.LogInformation("Handling decryption request for {Host}", HttpContext.Connection.RemoteIpAddress);
+
     try
     {
       using var aes = Aes.Create();
