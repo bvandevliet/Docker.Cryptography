@@ -64,6 +64,8 @@ public class EncryptionController : ControllerBase
     }
     catch (Exception ex)
     {
+      _logger.LogError(ex, "Error encrypting data");
+
       return BadRequest(new { Error = ex.Message });
     }
   }
@@ -96,6 +98,8 @@ public class EncryptionController : ControllerBase
     }
     catch (Exception ex)
     {
+      _logger.LogError(ex, "Error decrypting data");
+
       return BadRequest(new { Error = ex.Message });
     }
   }

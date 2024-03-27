@@ -19,17 +19,19 @@ public class SecretKeyManager
     if (File.Exists(_keyFilePath))
     {
       secretKey = File.ReadAllText(_keyFilePath);
+    }
+    else
+    {
+      secretKey = GenerateSecretKey(256 / 8);
 
-      // Check if the key is 256 bits long in hex.
-      if (secretKey.Length == 256 / 4)
-      {
-        return secretKey;
-      }
+      File.WriteAllText(_keyFilePath, secretKey, Encoding.ASCII);
     }
 
-    // Create a new 256-bit key.
-    secretKey = GenerateSecretKey(256 / 8);
-    File.WriteAllText(_keyFilePath, secretKey, Encoding.ASCII);
+    // Check if the key is 256 bits long in hex.
+    if (secretKey.Length != 256 / 4)
+    {
+      throw new ArgumentException("Key is not 256 bits long.");
+    }
 
     return secretKey;
   }

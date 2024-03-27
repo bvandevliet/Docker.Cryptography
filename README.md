@@ -1,6 +1,7 @@
 # Docker.Cryptography
 
-A container intended to run in a bridge network that provides a Web API for other containers to encrypt and decrypt sensitive data.
+A container intended to run in a bridge network that provides a Web API for other containers to encrypt and decrypt sensitive data.  
+The encryption method used is `aes-256-cbc`.  
 
 ### Usage
 
