@@ -5,7 +5,6 @@ services:
   cryptography:
     build:
       args:
-        - TAG=6.0-alpine
         - MODE=Debug
     environment:
       - ASPNETCORE_ENVIRONMENT=Development

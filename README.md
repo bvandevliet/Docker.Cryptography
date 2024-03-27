@@ -37,7 +37,7 @@ version: '3.6'
 services:
   cryptography:
     container_name: cryptography
-    image: bvandevliet/cryptography:linux-arm64-v8
+    image: bvandevliet/cryptography:latest
     restart: unless-stopped
     tty: true
     volumes:

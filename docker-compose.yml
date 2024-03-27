@@ -9,7 +9,7 @@ services:
       context: .
       dockerfile: Docker.Cryptography/Dockerfile
       args:
-        - TAG=6.0-alpine-arm64v8
+        - TAG=8.0-alpine
     tty: true
     volumes:
       - ./.volumes/secrets:/app/secrets
