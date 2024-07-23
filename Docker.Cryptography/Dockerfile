@@ -17,6 +17,8 @@ RUN dotnet publish "Docker.Cryptography.csproj" -c ${MODE} -o /app/publish /p:Us
 
 FROM base AS final
 RUN apk add -U --no-cache tzdata
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
 COPY --from=publish /app/publish .
+USER appuser
 ENTRYPOINT ["dotnet", "Docker.Cryptography.dll"]
