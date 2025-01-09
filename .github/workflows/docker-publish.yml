@@ -33,7 +33,7 @@ jobs:
     uses: bvandevliet/Actions.Shared/.github/workflows/docker-build-push.yml@master
     with:
       CR_REGISTRY: docker.io
-      PROJECT: Docker.Cryptography
+      CSPROJ_NAME: Docker.Cryptography
       IMAGE_NAME: ${{ github.repository_owner }}/cryptography
       majorMinorPatch: ${{ needs.gitversion.outputs.majorMinorPatch }}
       preReleaseLabel: ${{ needs.gitversion.outputs.preReleaseLabel }}
