@@ -1,6 +1,6 @@
+using System.Security.Cryptography;
 using Docker.Cryptography.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Cryptography;
 
 namespace Docker.Cryptography.Controllers;
 
@@ -8,99 +8,99 @@ namespace Docker.Cryptography.Controllers;
 [Route("api")]
 public class EncryptionController : ControllerBase
 {
-  private readonly ILogger<EncryptionController> _logger;
-  private readonly SecretKeyManager _keyManager;
+    private readonly ILogger<EncryptionController> _logger;
+    private readonly SecretKeyManager _keyManager;
 
-  public EncryptionController(
-    ILogger<EncryptionController> logger,
-    SecretKeyManager keyManager)
-  {
-    _logger = logger;
-    _keyManager = keyManager;
-  }
-
-  public static byte[] HexToByteArray(string hexString)
-  {
-    byte[] byteArray = new byte[hexString.Length / 2];
-
-    for (int i = 0; i < byteArray.Length; i++)
+    public EncryptionController(
+      ILogger<EncryptionController> logger,
+      SecretKeyManager keyManager)
     {
-      byteArray[i] = Convert.ToByte(hexString.Substring(i * 2, 2), 16);
+        _logger = logger;
+        _keyManager = keyManager;
     }
 
-    return byteArray;
-  }
-
-  [HttpPost("encrypt")]
-  public IActionResult Encrypt([FromBody] string plainText)
-  {
-    _logger.LogInformation("Handling encryption request for {Host}", HttpContext.Connection.RemoteIpAddress);
-
-    try
+    public static byte[] HexToByteArray(string hexString)
     {
-      using var aes = Aes.Create();
-      aes.Key = HexToByteArray(_keyManager.GetSecretKey());
-      aes.Mode = CipherMode.CBC;
-      aes.Padding = PaddingMode.PKCS7;
+        var byteArray = new byte[hexString.Length / 2];
 
-      // Generate a random IV for each encryption.
-      aes.GenerateIV();
-      byte[] iv = aes.IV;
+        for (var i = 0; i < byteArray.Length; i++)
+        {
+            byteArray[i] = Convert.ToByte(hexString.Substring(i * 2, 2), 16);
+        }
 
-      using var encryptor = aes.CreateEncryptor(aes.Key, iv);
-
-      using var memoryStream = new MemoryStream();
-      using var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write);
-      using var streamWriter = new StreamWriter(cryptoStream);
-
-      streamWriter.Write(plainText);
-      streamWriter.Flush();
-      cryptoStream.FlushFinalBlock();
-
-      byte[] encrypted = iv.Concat(memoryStream.ToArray()).ToArray();
-      string cipherText = Convert.ToBase64String(encrypted);
-
-      return Ok(cipherText);
+        return byteArray;
     }
-    catch (Exception ex)
+
+    [HttpPost("encrypt")]
+    public IActionResult Encrypt([FromBody] string plainText)
     {
-      _logger.LogError(ex, "Error encrypting data");
+        _logger.LogInformation("Handling encryption request for {Host}", HttpContext.Connection.RemoteIpAddress);
 
-      return BadRequest(new { Error = ex.Message });
+        try
+        {
+            using var aes = Aes.Create();
+            aes.Key = HexToByteArray(_keyManager.GetSecretKey());
+            aes.Mode = CipherMode.CBC;
+            aes.Padding = PaddingMode.PKCS7;
+
+            // Generate a random IV for each encryption.
+            aes.GenerateIV();
+            var iv = aes.IV;
+
+            using var encryptor = aes.CreateEncryptor(aes.Key, iv);
+
+            using var memoryStream = new MemoryStream();
+            using var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write);
+            using var streamWriter = new StreamWriter(cryptoStream);
+
+            streamWriter.Write(plainText);
+            streamWriter.Flush();
+            cryptoStream.FlushFinalBlock();
+
+            var encrypted = iv.Concat(memoryStream.ToArray()).ToArray();
+            var cipherText = Convert.ToBase64String(encrypted);
+
+            return Ok(cipherText);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error encrypting data");
+
+            return BadRequest(new { Error = ex.Message });
+        }
     }
-  }
 
-  [HttpPost("decrypt")]
-  public IActionResult Decrypt([FromBody] string cipherText)
-  {
-    _logger.LogInformation("Handling decryption request for {Host}", HttpContext.Connection.RemoteIpAddress);
-
-    try
+    [HttpPost("decrypt")]
+    public IActionResult Decrypt([FromBody] string cipherText)
     {
-      using var aes = Aes.Create();
-      aes.Key = HexToByteArray(_keyManager.GetSecretKey());
-      aes.Mode = CipherMode.CBC;
-      aes.Padding = PaddingMode.PKCS7;
+        _logger.LogInformation("Handling decryption request for {Host}", HttpContext.Connection.RemoteIpAddress);
 
-      byte[] encrypted = Convert.FromBase64String(cipherText);
-      byte[] iv = encrypted.Take(16).ToArray();
-      byte[] data = encrypted.Skip(16).ToArray();
+        try
+        {
+            using var aes = Aes.Create();
+            aes.Key = HexToByteArray(_keyManager.GetSecretKey());
+            aes.Mode = CipherMode.CBC;
+            aes.Padding = PaddingMode.PKCS7;
 
-      using var decryptor = aes.CreateDecryptor(aes.Key, iv);
+            var encrypted = Convert.FromBase64String(cipherText);
+            var iv = encrypted.Take(16).ToArray();
+            var data = encrypted.Skip(16).ToArray();
 
-      using var memoryStream = new MemoryStream(data);
-      using var cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read);
-      using var streamReader = new StreamReader(cryptoStream);
+            using var decryptor = aes.CreateDecryptor(aes.Key, iv);
 
-      string plainText = streamReader.ReadToEnd();
+            using var memoryStream = new MemoryStream(data);
+            using var cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read);
+            using var streamReader = new StreamReader(cryptoStream);
 
-      return Ok(plainText);
+            var plainText = streamReader.ReadToEnd();
+
+            return Ok(plainText);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error decrypting data");
+
+            return BadRequest(new { Error = ex.Message });
+        }
     }
-    catch (Exception ex)
-    {
-      _logger.LogError(ex, "Error decrypting data");
-
-      return BadRequest(new { Error = ex.Message });
-    }
-  }
 }
